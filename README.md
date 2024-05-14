@@ -9,11 +9,11 @@ This project designed to provide users with seamless access and analysis of data
 4. Google Client Library
 
 ## Packages to install 
-1.pip install google-api-python-client
-2.pip install streamlit
-3.pip install pandas
-4.pip install isodate
-5.pip install streamlit-option-menu
+1. pip install google-api-python-client
+2. pip install streamlit
+3. pip install pandas
+4. pip install isodate
+5. pip install streamlit-option-menu
 
 ## Approach
 

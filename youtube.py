@@ -120,6 +120,10 @@ def dur(duration_str): #function to avoid time formate problem in video duration
     return duration_seconds
 
 #SQL query to retrive data from SQLite database
+ch=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Subscription_Count as 'Subscription Count', Channel_Description as 'Channel Description' from Channels''',conn)
+vid=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Video_name as 'Video name', View_Count as 'View Count'  from Videos''',conn)
+com=pd.read_sql_query('''SELECT Comment_Text as 'Comment text',Comment_Author as 'Comment author' from Comments''',conn)
+cha=ch.drop_duplicates()
 #"1.What are the names of all the videos and their corresponding channels?"
 question1=pd.read_sql_query('''SELECT Channel_name as "CHANNEL NAME",Video_name as "VIDEOS NAME" from Videos''',conn)
 #"2.Which channels have the most number of videos and how many videos do they have?",
@@ -158,6 +162,12 @@ if selected == "HOME":
   if collect:
       all_functions(channelid)
       sl.write("Successfully uploaded")
+  with sl.expander("CHANNELS"):
+      sl.write(cha)
+  with sl.expander("VIDEOS"):
+      sl.write(vid)
+  with sl.expander("COMMENTS"):
+      sl.write(com)
 elif selected == "VIEW":
     question = sl.sidebar.selectbox("Select Questions",
                                     ("1.What are the names of all the videos and their corresponding channels?",

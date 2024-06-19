@@ -120,6 +120,7 @@ def dur(duration_str): #function to avoid time formate problem in video duration
     return duration_seconds
 
 #SQL query to retrive data from SQLite database
+#table on main page
 ch=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Subscription_Count as 'Subscription Count', Channel_Description as 'Channel Description' from Channels''',conn)
 vid=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Video_name as 'Video name', View_Count as 'View Count'  from Videos''',conn)
 com=pd.read_sql_query('''SELECT Comment_Text as 'Comment text',Comment_Author as 'Comment author' from Comments''',conn)

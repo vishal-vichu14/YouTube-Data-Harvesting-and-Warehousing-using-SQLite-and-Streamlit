@@ -7,7 +7,6 @@ api_service_name = "youtube"
 api_version = "v3"
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=apid)
-
 def get_channel_id(channel_id): #function to get channel details.
   request = youtube.channels().list(
       part="statistics,snippet,contentDetails",
@@ -98,19 +97,51 @@ def get_comments_info(video_ids): #function to get comment details
 
 #sqlite connectivity
 import sqlite3
-conn=sqlite3.connect('harvest.db')
+conn=sqlite3.connect('harvest_data.db')
 cursor=conn.cursor()
-
+cursor.execute("""CREATE TABLE if not exists Channels(Channel_name TEXT,
+Channel_id TEXT ,
+Subscription_Count INTEGER,
+Channel_viwes INTEGER,
+Channel_Description TEXT,
+Playlist_id TEXT
+)""")
+cursor.execute("""CREATE TABLE if not exists Videos(Channel_name TEXT,
+Channel_id TEXT ,
+Video_id TEXT,
+Video_name INTEGER,
+Video_Description TEXT,
+PublishedAt TEXT,
+View_Count INTEGER,
+Like_Count INTEGER,
+Comment_Count INTEGER,
+Duration TEXT,
+Thumbnail TEXT,
+Caption_Status TEXT
+)""")
+cursor.execute("""CREATE TABLE if not exists Comments(Comment_id TEXT,
+Channel_id TEXT ,
+Video_id TEXT,
+Comment_Text TEXT,
+Comment_Author TEXT,
+Comment_PublishedAt TEXT
+)""")
 
 def all_functions(channelid): #main function which collects the data and stores them in SQLite database
-  message="Successfully Stored"
-  channels=get_channel_id(channelid)
-  videoids=get_vid_id(channelid)
-  videos=get_vid_info(videoids)
-  comments=get_comments_info(videoids)
-  channels.to_sql("Channels", conn, if_exists="append", index=False)
-  videos.to_sql("Videos", conn, if_exists="append", index=False)
-  comments.to_sql("Comments", conn, if_exists="append", index=False)
+  cursor.execute("SELECT 1 FROM Channels WHERE channel_id = ?", (channelid,))
+  result = cursor.fetchone()
+
+  if result:
+    message="Data for this channel ID is already stored."
+  else:
+    channels=get_channel_id(channelid)
+    videoids=get_vid_id(channelid)
+    videos=get_vid_info(videoids)
+    comments=get_comments_info(videoids)
+    channels.to_sql("Channels", conn, if_exists="append", index=False)
+    videos.to_sql("Videos", conn, if_exists="append", index=False)
+    comments.to_sql("Comments", conn, if_exists="append", index=False)
+    message = "Successfully Stored"
   return message
 
 
@@ -125,6 +156,8 @@ ch=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Subscription_Count
 vid=pd.read_sql_query('''SELECT Channel_name as 'Channel name',Video_name as 'Video name', View_Count as 'View Count'  from Videos''',conn)
 com=pd.read_sql_query('''SELECT Comment_Text as 'Comment text',Comment_Author as 'Comment author' from Comments''',conn)
 cha=ch.drop_duplicates()
+
+
 #"1.What are the names of all the videos and their corresponding channels?"
 question1=pd.read_sql_query('''SELECT Channel_name as "CHANNEL NAME",Video_name as "VIDEOS NAME" from Videos''',conn)
 #"2.Which channels have the most number of videos and how many videos do they have?",
@@ -152,7 +185,7 @@ question10=pd.read_sql_query('''select Channel_name as "CHANNEL NAME",Video_name
 
 #code for Streamlit Application
 
-sl.title(":green[YOUTUBE DATA HARVESTING AND WAREHOUSING]")
+#sl.title(":green[YOUTUBE DATA HARVESTING AND WAREHOUSING]")
 
 with sl.sidebar:
     selected = option_menu("Main Menu", ["HOME", 'VIEW'],
@@ -161,14 +194,15 @@ if selected == "HOME":
   channelid=sl.text_input("Enter the Youtube Channel Id")
   collect=sl.button(":green[Collect and store in SQL]")
   if collect:
-      all_functions(channelid)
-      sl.write("Successfully uploaded")
+      message=all_functions(channelid)
+      sl.write(message)
   with sl.expander("CHANNELS"):
       sl.write(cha)
   with sl.expander("VIDEOS"):
       sl.write(vid)
   with sl.expander("COMMENTS"):
       sl.write(com)
+
 elif selected == "VIEW":
     question = sl.sidebar.selectbox("Select Questions",
                                     ("1.What are the names of all the videos and their corresponding channels?",
@@ -212,5 +246,4 @@ elif selected == "VIEW":
     elif question == "10.Which videos have the highest number of comments, and what are their corresponding channel names?":
         q10 = pd.DataFrame(question10)
         sl.write(q10)
-
 
